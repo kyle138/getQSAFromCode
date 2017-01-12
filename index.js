@@ -118,8 +118,7 @@ function handleError(method, response) {
 //Just testing
 //==================
 var url = "https://s3.amazonaws.com/presentations.hartenergyconferences.com/DUG_Eagle_Ford/2016/test.png?chicken=egg&dog=cat";
-var key = "DUG_Eagle_Ford/2016/test.png";
-var defaultCode = "138"; // If the provided code is valid (implement later)
+var defaultCode = "138"; // The code used for now until in lambda 
 
 
 parseUrl(url, function(err, parseData) {
