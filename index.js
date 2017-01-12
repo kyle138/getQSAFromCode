@@ -80,12 +80,11 @@ function getCode(bucket, key, cb) {
   }
 }; // End getCode
 
-function getQSA(key, expires, bucket, cb) {
-  if(!key) {
-    if(typeof cb === 'function' && cb("Error: 'key' is a required argument", null));
+function getQSA(bucket, key, expires, cb) {
+  if(!bucket||!key) {
+    if(typeof cb === 'function' && cb("Error: 'bucket' and 'key' are required arguments", null));
     return false;
   } else {
-    bucket = bucket ? bucket : defaultBucket;
     expires = expires ? expires : defaultExpires;
     var params = {
       Bucket: bucket,
@@ -134,7 +133,7 @@ parseUrl(url, function(err, parseData) {
       } else {
         console.log("codeData: "+codeData); //DEBUG
         if(codeData == defaultCode) {   //REPLACE defaultCode WITH event.data.passcode
-          getQSA(parseData.Key, defaultExpires, parseData.Bucket, function(err, qsaData) {
+          getQSA(parseData.Bucket, parseData.Key, defaultExpires, function(err, qsaData) {
             if(err) {
               handleError("getQSA", err);
             } else {
