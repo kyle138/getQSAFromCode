@@ -1,9 +1,60 @@
-var awsOptions = require('./awsOptions.json');
+'use strict';
+
 var AWS = require('aws-sdk');
-AWS.config.update(awsOptions);
 var S3 = new AWS.S3();
 
 var defaultExpires = 600; // Timeout (in seconds) that the signed URL is good for
+
+exports.handler = (event, context, callback) => {
+  console.log('Received event:', JSON.stringify(event,null,2)); //DEBUG
+  if(!event.passcode||!event.hrefurl) {
+    callback("Required field missing.", null);
+  } else {
+    console.log("code: "+event.passcode); //DEBUG
+    console.log("url: "+event.hrefurl); //DEBUG
+
+    parseUrl(event.hrefurl, function(err, parseData) {
+      if(err) {
+        handleError("parseurl", err);
+      } else {
+        console.log("parseData: "+JSON.stringify(parseData,null,2));  //DEBUG
+        getCode(parseData.Bucket, parseData.Key, function(err, codeData) {
+          if(err) {
+            handleError("getCode", err);
+          } else {
+            console.log("codeData: "+codeData); //DEBUG
+            if(codeData == event.passcode) {
+              getQSA(parseData.Bucket, parseData.Key, defaultExpires, function(err, qsaData) {
+                if(err) {
+                  handleError("getQSA", err);
+                } else {
+                  console.log("getQSA: "+qsaData);  //DEBUG
+                  callback(null, qsaData); // Return signed URL for href
+                }
+              }); //getQSA
+            } else {
+              callback("Incorrect Passcode",null);  // The submitted passcode does not match
+            } // End if code matches
+          }
+        }); //getCode
+      }
+    }); //parseUrl
+
+    function handleError(method, response) {
+      if (response instanceof Error) {
+        console.log(method+" Error: ", response.message);
+      } else {
+        console.log(method+" Error:");
+        console.log(response.data);
+        console.log(response.status);
+        console.log(response.headers);
+        console.log(response.config);
+      }
+      callback("Invalid request", null); // Something went wrong, obviously
+    }; // End handleError
+
+  }
+}; // END exports.handler
 
 function parseUrl(url, cb) {
   if(!url) {
@@ -101,47 +152,3 @@ function getQSA(bucket, key, expires, cb) {
     }); //getSignedUrl
   }
 }; // End getQSA
-
-function handleError(method, response) {
-  if (response instanceof Error) {
-    console.log(method+" Error: ", response.message);
-  } else {
-    console.log(method+" Error:");
-    console.log(response.data);
-    console.log(response.status);
-    console.log(response.headers);
-    console.log(response.config);
-  }
-//  callback("Invalid request", null);  // Implement in Lambda
-}; // End handleError
-
-//Just testing
-//==================
-var url = "https://s3.amazonaws.com/presentations.hartenergyconferences.com/DUG_Eagle_Ford/2016/test.png?chicken=egg&dog=cat";
-var defaultCode = "138"; // The code used for now until in lambda 
-
-
-parseUrl(url, function(err, parseData) {
-  if(err) {
-    handleError("parseurl", err);
-  } else {
-    console.log("parseData: "+JSON.stringify(parseData,null,2));  //DEBUG
-    getCode(parseData.Bucket, parseData.Key, function(err, codeData) {
-      if(err) {
-        handleError("getCode", err);
-      } else {
-        console.log("codeData: "+codeData); //DEBUG
-        if(codeData == defaultCode) {   //REPLACE defaultCode WITH event.data.passcode
-          getQSA(parseData.Bucket, parseData.Key, defaultExpires, function(err, qsaData) {
-            if(err) {
-              handleError("getQSA", err);
-            } else {
-              console.log("getQSA: "+qsaData);  //DEBUG
-//              callback(url, null); // Implement in Lambda
-            }
-          }); //getQSA
-        } // End if code matches
-      }
-    }); //getCode
-  }
-}); //parseUrl
