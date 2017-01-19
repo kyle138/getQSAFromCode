@@ -53,102 +53,102 @@ exports.handler = (event, context, callback) => {
       callback("Invalid request", null); // Something went wrong, obviously
     }; // End handleError
 
-  }
-}; // END exports.handler
-
-function parseUrl(url, cb) {
-  if(!url) {
-    if(typeof cb === 'function' && cb("Error: 'url' is a required argument", null));
-    return false;
-  } else {
-    getBucket(url, function(err, bucketData) {
-      if(err) {
-        handleError("getBucket", err);
+    function parseUrl(url, cb) {
+      if(!url) {
+        if(typeof cb === 'function' && cb("Error: 'url' is a required argument", null));
+        return false;
       } else {
-        var bucKey = {
-          "Bucket": bucketData,
-        };
-        getKey(url, bucKey.Bucket, function(err, keyData) {
+        getBucket(url, function(err, bucketData) {
           if(err) {
-            handleError("getKey", err);
+            handleError("getBucket", err);
           } else {
-            bucKey.Key = keyData;
-            if(typeof cb === 'function' && cb(null, bucKey));
-            else return bucKey;
+            var bucKey = {
+              "Bucket": bucketData,
+            };
+            getKey(url, bucKey.Bucket, function(err, keyData) {
+              if(err) {
+                handleError("getKey", err);
+              } else {
+                bucKey.Key = keyData;
+                if(typeof cb === 'function' && cb(null, bucKey));
+                else return bucKey;
+              }
+            }); //getKey
           }
-        }); //getKey
+        }); //getBucket
       }
-    }); //getBucket
-  }
-}; // End parseUrl
+    }; // End parseUrl
 
-function getBucket(string, cb) {
-  if(!string) {
-    if(typeof cb === 'function' && cb("Error: 'string' is a required argument", null));
-    return false;
-  } else {
-    // Strip http://, https://, and https://s3.amazonaws.com/ from beginning of url
-    // Split remainder at first /, left side should be bucket name.
-    string=string.replace(/(^https:\/\/s3.amazonaws.com\/)|(^https:\/\/)|(^http:\/\/)/, "").split("/")[0];
-    if(typeof cb === 'function' && cb(null, string));
-    else return string;
-  }
-}; // End getBucket
-
-function getKey(string, bucket, cb) {
-  if(!string||!bucket) {
-    if(typeof cb === 'function' && cb("Error: 'string' and 'bucket' are required arguments", null));
-    return false;
-  } else {
-    //Strip any query strings that may be appended
-    //Then get everything after the bucket and its following /
-    string=string.split(/[?#]/)[0].split(bucket+"/")[1];
-    if(typeof cb === 'function' && cb(null, string));
-    else return string;
-  }
-}; // End getKey
-
-function getCode(bucket, key, cb) {
-  if(!bucket||!key) {
-    console.log("getCode: Missing required arguments.");
-    if(typeof cb === 'function' && cb("Error: 'bucket', 'key', and 'code' are required arguments", null));
-    return false;
-  } else {
-    var code;
-    var params = {
-      Bucket: bucket,
-      Key: key.replace(key.slice(key.lastIndexOf("/")),"/passcode.txt")
-    };
-    S3.getObject(params, function(err, data) {
-      if(err) {
-        handleError("getObject", err);
+    function getBucket(string, cb) {
+      if(!string) {
+        if(typeof cb === 'function' && cb("Error: 'string' is a required argument", null));
+        return false;
       } else {
-        code = data.Body.toString('ascii').trim();
-        if(typeof cb === 'function' && cb(null, code));
-        else return code;
+        // Strip http://, https://, and https://s3.amazonaws.com/ from beginning of url
+        // Split remainder at first /, left side should be bucket name.
+        string=string.replace(/(^https:\/\/s3.amazonaws.com\/)|(^https:\/\/)|(^http:\/\/)/, "").split("/")[0];
+        if(typeof cb === 'function' && cb(null, string));
+        else return string;
       }
-    }); //getObject
-  }
-}; // End getCode
+    }; // End getBucket
 
-function getQSA(bucket, key, expires, cb) {
-  if(!bucket||!key) {
-    if(typeof cb === 'function' && cb("Error: 'bucket' and 'key' are required arguments", null));
-    return false;
-  } else {
-    expires = expires ? expires : defaultExpires;
-    var params = {
-      Bucket: bucket,
-      Key: key,
-      Expires: expires
-    };
-    S3.getSignedUrl('getObject', params, function (err, url) {
-      if (err) {
-        console.log("getSignedUrl Error: ", err, err.stack);
+    function getKey(string, bucket, cb) {
+      if(!string||!bucket) {
+        if(typeof cb === 'function' && cb("Error: 'string' and 'bucket' are required arguments", null));
+        return false;
       } else {
-        if(typeof cb === 'function' && cb(null, url));
-        else return url;
+        //Strip any query strings that may be appended
+        //Then get everything after the bucket and its following /
+        string=string.split(/[?#]/)[0].split(bucket+"/")[1];
+        if(typeof cb === 'function' && cb(null, string));
+        else return string;
       }
-    }); //getSignedUrl
-  }
-}; // End getQSA
+    }; // End getKey
+
+    function getCode(bucket, key, cb) {
+      if(!bucket||!key) {
+        console.log("getCode: Missing required arguments.");
+        if(typeof cb === 'function' && cb("Error: 'bucket', 'key', and 'code' are required arguments", null));
+        return false;
+      } else {
+        var code;
+        var params = {
+          Bucket: bucket,
+          Key: key.replace(key.slice(key.lastIndexOf("/")),"/passcode.txt")
+        };
+        S3.getObject(params, function(err, data) {
+          if(err) {
+            handleError("getObject", err);
+          } else {
+            code = data.Body.toString('ascii').trim();
+            if(typeof cb === 'function' && cb(null, code));
+            else return code;
+          }
+        }); //getObject
+      }
+    }; // End getCode
+
+    function getQSA(bucket, key, expires, cb) {
+      if(!bucket||!key) {
+        if(typeof cb === 'function' && cb("Error: 'bucket' and 'key' are required arguments", null));
+        return false;
+      } else {
+        expires = expires ? expires : defaultExpires;
+        var params = {
+          Bucket: bucket,
+          Key: key,
+          Expires: expires
+        };
+        S3.getSignedUrl('getObject', params, function (err, url) {
+          if (err) {
+            console.log("getSignedUrl Error: ", err, err.stack);
+          } else {
+            if(typeof cb === 'function' && cb(null, url));
+            else return url;
+          }
+        }); //getSignedUrl
+      }
+    }; // END getQSA
+
+  } // END if required fields
+}; // END exports.handler
