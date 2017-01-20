@@ -16,10 +16,12 @@ exports.handler = (event, context, callback) => {
       if(err) {
         handleError("parseurl", err);
       } else {
+        console.log("parseData: "+JSON.stringify(parseData,null,2));  //DEBUG
         getCode(parseData.Bucket, parseData.Key, function(err, codeData) {
           if(err) {
             handleError("getCode", err);
           } else {
+            console.log("codeData: "+codeData); //DEBUG
             if(codeData == event.passcode) {
               getQSA(parseData.Bucket, parseData.Key, defaultExpires, function(err, qsaData) {
                 if(err) {
@@ -83,7 +85,7 @@ exports.handler = (event, context, callback) => {
       } else {
         // Strip http://, https://, and https://s3.amazonaws.com/ from beginning of url
         // Split remainder at first /, left side should be bucket name.
-        string=string.replace(/(^https:\/\/s3.amazonaws.com\/)|(^https:\/\/)|(^http:\/\/)/, "").split("/")[0];
+        string=string.replace(/(^https:\/\/s3-us-west-2.amazonaws.com\/)|(^https:\/\/)|(^http:\/\/)/, "").split("/")[0];
         if(typeof cb === 'function' && cb(null, string));
         else return string;
       }
