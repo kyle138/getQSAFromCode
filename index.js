@@ -10,25 +10,22 @@ exports.handler = (event, context, callback) => {
   if(!event.passcode||!event.hrefurl) {
     callback("Required field missing.", null);
   } else {
-    console.log("code: "+event.passcode); //DEBUG
-    console.log("url: "+event.hrefurl); //DEBUG
 
+    // parse the provided URL, get the stored passcode, compare with provided code, getQSA for object, return signed URL
     parseUrl(event.hrefurl, function(err, parseData) {
       if(err) {
         handleError("parseurl", err);
       } else {
-        console.log("parseData: "+JSON.stringify(parseData,null,2));  //DEBUG
         getCode(parseData.Bucket, parseData.Key, function(err, codeData) {
           if(err) {
             handleError("getCode", err);
           } else {
-            console.log("codeData: "+codeData); //DEBUG
             if(codeData == event.passcode) {
               getQSA(parseData.Bucket, parseData.Key, defaultExpires, function(err, qsaData) {
                 if(err) {
                   handleError("getQSA", err);
                 } else {
-                  console.log("getQSA: "+qsaData);  //DEBUG
+                  console.log('Signed URL: '+qsaData);  //DEBUG
                   callback(null, qsaData); // Return signed URL for href
                 }
               }); //getQSA
