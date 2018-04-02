@@ -81,7 +81,8 @@ exports.handler = (event, context, callback) => {
         if(typeof cb === 'function' && cb("Error: 'string' is a required argument", null));
         return false;
       } else {
-        // Strip http://, https://, and https://s3.amazonaws.com/ from beginning of url
+        // Strip http://, https://, https://s3.amazonaws.com/, or **alternate S3 endpoints from beginning of url
+        // ** Alternate S3 endpoints are listed at https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region
         // Split remainder at first /, left side should be bucket name.
         string=string.replace(/(^https:\/\/s3\.amazonaws\.com\/)|((^https:\/\/s3)([\.-])([a-z0-9-\.]+)(\.amazonaws\.(com|com\.cn)\/))|(^https:\/\/)|(^http:\/\/)/, "").split("/")[0];
         if(typeof cb === 'function' && cb(null, string));
