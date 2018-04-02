@@ -48,7 +48,7 @@ exports.handler = (event, context, callback) => {
         console.log(response.config);
       }
       callback("Invalid request", null); // Something went wrong, obviously
-    }; // End handleError
+    } // End handleError
 
     function parseUrl(url, cb) {
       if(!url) {
@@ -74,7 +74,7 @@ exports.handler = (event, context, callback) => {
           }
         }); //getBucket
       }
-    }; // End parseUrl
+    } // End parseUrl
 
     function getBucket(string, cb) {
       if(!string) {
@@ -87,7 +87,7 @@ exports.handler = (event, context, callback) => {
         if(typeof cb === 'function' && cb(null, string));
         else return string;
       }
-    }; // End getBucket
+    } // End getBucket
 
     function getKey(string, bucket, cb) {
       if(!string||!bucket) {
@@ -100,7 +100,7 @@ exports.handler = (event, context, callback) => {
         if(typeof cb === 'function' && cb(null, string));
         else return string;
       }
-    }; // End getKey
+    } // End getKey
 
     function getCode(bucket, key, cb) {
       if(!bucket||!key) {
@@ -123,7 +123,7 @@ exports.handler = (event, context, callback) => {
           }
         }); //getObject
       }
-    }; // End getCode
+    } // End getCode
 
     function getQSA(bucket, key, expires, cb) {
       if(!bucket||!key) {
@@ -145,7 +145,7 @@ exports.handler = (event, context, callback) => {
           }
         }); //getSignedUrl
       }
-    }; // END getQSA
+    } // END getQSA
 
   } // END if required fields
 }; // END exports.handler
