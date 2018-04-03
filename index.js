@@ -2,6 +2,7 @@
 
 var AWS = require('aws-sdk');
 var S3 = new AWS.S3();
+AWS.config.update({region: 'us-west-2'});
 
 var defaultExpires = 600; // Timeout (in seconds) that the signed URL is good for
 
@@ -37,19 +38,6 @@ exports.handler = (event, context, callback) => {
       } // Sweet callback hell, when
     }); //parseUrl
   } // END if required fields
-  
-  function handleError(method, response) {
-    if (response instanceof Error) {
-      console.log(method+" Error: ", response.message);
-    } else {
-      console.log(method+" Error:");
-      console.log(response.data);
-      console.log(response.status);
-      console.log(response.headers);
-      console.log(response.config);
-    }
-    callback("Invalid request", null); // Something went wrong, obviously
-  } // End handleError
 
   function getBucket(string, cb) {
     if(!string) {
@@ -148,5 +136,39 @@ exports.handler = (event, context, callback) => {
       }); //getSignedUrl
     }
   } // END getQSA
+
+
+  // Output error information and end the Lambda
+  function handleError(method, response) {
+    var errorMessage = {
+      lambdaFunctionName: context.functionName,
+      eventTimeUTC: new Date().toUTCString(),
+      methodName: method,
+      error: response
+    };
+
+    console.log("errorMessage: "+JSON.stringify(errorMessage, null, 2)); //DEBUG
+
+    // Load the DDB client so we can write to errorLogs
+    const documentClient = new AWS.DynamoDB.DocumentClient();
+
+    // ttl value for DDB, item expires after 1 month
+    var ttl = Math.floor(Date.now() / 1000)+2592000;
+
+    // Prepare params for DDB put
+    var params = {
+      TableName: "errorLogs",
+      Item: {
+        ttl: ttl,
+        data: errorMessage
+      }
+    };
+
+    //Now everybody gonna know what you did wrong
+    documentClient.put(params, function(err, data) {
+      if (err) console.log("Unable to add DDB item: "+JSON.stringify(err, null, 2));
+      callback("Invalid Request", null);
+    });
+  } // End handleError
 
 }; // END exports.handler
